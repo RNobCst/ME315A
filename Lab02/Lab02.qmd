@@ -1,0 +1,112 @@
+---
+title: "Lab02"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lab02
+
+```{r}
+library(readr)
+library(dplyr)
+```
+
+1.  
+
+As estatísticas que precisamos são somente a frequência de vôos atrasados e o n total de vôos
+
+2.  
+
+```{r}
+getStats <- function(input, pos) {
+  resultado <- input |> 
+    filter(AIRLINE %in% c("AA", "DL", "UA", "US")) |> 
+    filter(!is.na(ARRIVAL_DELAY)) |> 
+    group_by(DAY, MONTH, AIRLINE, YEAR) |> 
+    summarise(
+      total_voos = n(),                                
+      voos_atrasados = sum(ARRIVAL_DELAY > 10),     
+      .groups = "drop"                              
+    )
+  
+  return(resultado)
+}
+```
+
+3.  
+
+```{r}
+colunas_interesse <- cols_only(
+  YEAR = col_integer(),
+  MONTH = col_integer(),
+  DAY = col_integer(),
+  AIRLINE = col_character(),
+  ARRIVAL_DELAY = col_double()
+)
+
+dados_processados <- read_csv_chunked(
+  file = "flights.csv.zip",
+  callback = DataFrameCallback$new(getStats),
+  chunk_size = 10000,
+  col_types = colunas_interesse
+)
+```
+
+4.  
+
+```{r}
+computeStats <- function(dados) {
+  
+  resultado_final <- dados |> 
+    group_by(YEAR, MONTH, DAY, AIRLINE) |> 
+    summarise(
+      total_geral = sum(total_voos),
+      atrasos_geral = sum(voos_atrasados),
+      .groups = "drop"
+    ) |> 
+    mutate(
+      Perc = atrasos_geral / total_geral,
+      Data_formatada = as.Date(paste(YEAR, MONTH, DAY, sep = "-"))
+    ) |> 
+    select(
+      Cia = AIRLINE,
+      Data = Data_formatada,
+      Perc = Perc
+    )
+  
+  return(resultado_final)
+}
+```
+
+5.  
+
+```{r}
+library(ggplot2)
+library(ggcal)
+
+pal <- scale_fill_gradient(low = "#4575b4", high = "#d73027")
+baseCalendario <- function(stats, cia) {
+  dados_cia <- stats |> 
+    filter(Cia == cia)
+  base <- ggcal(dados_cia$Data, dados_cia$Perc)
+
+  return(base)
+}
+
+estat <- computeStats(dados_processados)
+cAA <- baseCalendario(estat, "AA")
+cDL <- baseCalendario(estat, "DL")
+cUA <- baseCalendario(estat, "UA")
+cUS <- baseCalendario(estat, "US")
+
+cAA + pal + ggtitle("Mapa de Calor de Atrasos - AA")
+cDL + pal + ggtitle("Mapa de Calor de Atrasos - DL")
+cUA + pal + ggtitle("Mapa de Calor de Atrasos - UA")
+cUS + pal + ggtitle("Mapa de Calor de Atrasos - US")
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
