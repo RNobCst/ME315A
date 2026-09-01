@@ -1,0 +1,104 @@
+---
+title: "Lab03"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lab03
+
+```{r}
+library(readr)
+library(dplyr)
+
+getStats <- function(input, pos) {
+  resultado <- input |> 
+    filter(!startsWith(DESTINATION_AIRPORT, "1")) |> 
+    filter(!is.na(DESTINATION_AIRPORT), !is.na(ARRIVAL_DELAY)) |> 
+    group_by(DESTINATION_AIRPORT) |> 
+    summarise(
+      soma_dos_atrasos = sum(ARRIVAL_DELAY),   
+      total_voos = n(),                        
+      .groups = "drop"
+    )
+  return(resultado)
+}
+```
+
+```{r}
+airlines <- read_csv("airlines.csv")
+
+cols_airports <- cols_only(
+  IATA_CODE = col_character(),
+  CITY = col_character(),
+  STATE = col_character(),
+  LATITUDE = col_double(),
+  LONGITUDE = col_double()
+)
+airports <- read_csv("airports.csv", col_types = cols_airports)
+
+dados_processados <- read_csv_chunked(
+  file = "flights.csv",
+  callback = DataFrameCallback$new(getStats),
+  chunk_size = 1000000,
+  col_types = cols_only(DESTINATION_AIRPORT = col_character(), 
+                        ARRIVAL_DELAY = col_double())
+                
+)
+
+flights <- dados_processados |> 
+  group_by(DESTINATION_AIRPORT) |> 
+  summarise(
+    atraso_total = sum(soma_dos_atrasos),
+    volume_voos = sum(total_voos),
+    .groups = "drop"
+  ) |> 
+  mutate(atraso_medio = atraso_total / volume_voos) |> 
+  select(DESTINATION_AIRPORT, atraso_medio)
+```
+
+```{r}
+aeroportos_ausentes <- anti_join(
+  flights, 
+  airports, 
+  by = c("DESTINATION_AIRPORT" = "IATA_CODE")
+)
+print(aeroportos_ausentes)
+
+flights <- left_join(
+  flights, 
+  airports, 
+  by = c("DESTINATION_AIRPORT" = "IATA_CODE")
+)
+```
+
+```{r}
+aeroportos_por_estado <- airports |> 
+  group_by(STATE) |> 
+  summarise(total_aeroportos = n()) |> 
+  arrange(desc(total_aeroportos))
+
+aeroportos_por_estado
+```
+
+```{r}
+library(leaflet)
+
+flights_mapa <- flights |> 
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE))
+
+this <- leaflet(data = flights_mapa) |> 
+
+addTiles() |> 
+  addMarkers(
+    lng = ~LONGITUDE, 
+    lat = ~LATITUDE, 
+  )
+
+this
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
