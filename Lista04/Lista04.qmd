@@ -1,0 +1,168 @@
+---
+title: "Lista04"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lista04
+
+```{r}
+library(DBI)
+library(RSQLite)
+
+con = dbConnect(SQLite(), "me315.sqlite")
+```
+
+1.  Exiba todas as informações de qualquer reserva natural que possua um número de reserva no conjunto {2, 4, 6, 8, 10}.
+
+```{sql connection=con}
+select * from preserve
+where pno in (2, 4, 6, 8, 10)
+```
+
+2.  Exiba todas as informações sobre todas as reservas naturais, exceto: DANCING PRAIRIE, MULESHOE RANCH, MCELWAIN-OLSEN e TATKON.
+
+```{sql connection=con}
+select * from preserve 
+where pname not in ("DANCING PRAIRIE", "MULESHOE RANCH", "MCELWAIN-OLSEN", "TATKON")
+```
+
+3.  Exiba todas as informações de qualquer reserva natural que possua um valor de `PNO` entre e incluindo 3 e 10.
+
+```{sql connection=con}
+select * from preserve
+where pno between 3 and 10 
+```
+
+4.  Exiba todas as informações de qualquer reserva natural que possua um valor de `PNO` menor que 3 ou maior que 10.
+
+```{sql connection=con}
+select * from preserve 
+where pno not between 3 and 10 
+```
+
+5.  Exiba o estado, o número da reserva e o tamanho de qualquer reserva natural que não esteja em Montana e não esteja no Arizona e seja menor que 50 acres ou maior que 800 acres. Ordene o resultado pelo número da reserva em sequência descendente.
+
+```{sql connection=con}
+select state, pno, acres from preserve
+where state not in ("MT", "AZ") and acres not between 50 and 800
+order by pno desc
+```
+
+6.  Exiba o valor de `PNAME` de todas as reservas naturais com um nome que comece com a letra ‘D’.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "D%"
+```
+
+7.  Exiba o nome de qualquer reserva natural que tenha ‘TOWN’ em qualquer lugar do seu nome.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "%TOWN%"
+```
+
+8.  Exiba o valor de `PNAME` de todas as reservas naturais com um nome que termine com `PRAIRIE`.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "%PRAIRIE"
+```
+
+9.  Exiba o nome de qualquer reserva natural que tenha a string ‘ING’ em qualquer lugar do seu nome.
+
+```{sql connection=con}
+select pname from preserve 
+where pname like "%ING%"
+```
+
+10. Exiba o nome de qualquer reserva natural cujo nome termine com a letra ‘E’.
+
+```{sql connection=con}
+select pname from preserve 
+where pname like "%E"
+```
+
+11. Exiba o nome de qualquer reserva natural que tenha a letra ‘E’ imediatamente após a letra ‘M’ em qualquer lugar do seu nome.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "%ME%"
+```
+
+12. Exiba o nome de qualquer reserva natural que tenha a letra ‘E’ em qualquer lugar após a letra ‘M’ em seu nome.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "%M%E%"
+```
+
+13. Exiba o nome de qualquer reserva natural que tenha a letra ‘A’ na segunda posição.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "_A%"
+```
+
+14. Exiba o nome de qualquer reserva natural que tenha um espaço em branco em qualquer lugar do seu nome.
+
+```{sql connection=con}
+select pname from preserve 
+where pname like "% %"
+```
+
+15. Exiba o nome de qualquer reserva natural que tenha ‘FARM’, ‘SWAMP’ ou ‘PRAIRIE’ em qualquer lugar do seu nome.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "%FARM%" or pname like "%SWAMP%" or pname like "%PRAIRIE%"
+```
+
+16. Exiba o nome de qualquer reserva natural com um ponto ou um hífen em qualquer lugar do seu nome.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "%.%" or pname like "%-%"
+```
+
+17. Exiba o nome de qualquer reserva natural que tenha a letra ‘R’ na quinta posição e termine com ‘PRAIRIE’.
+
+```{sql connection=con}
+select pname from preserve
+where pname like "____R%PRAIRIE"
+```
+
+18. Exiba todas as informações sobre qualquer funcionário que trabalhe em um departamento com um valor de `DNO` na seguinte lista: {10, 40}.
+
+```{sql connection=con}
+select * from employee
+where dno in (10, 40)
+```
+
+19. Exiba todas as informações sobre qualquer funcionário que trabalhe em um departamento com um valor de `DNO` que não esteja na seguinte lista: {10, 40}.
+
+```{sql connection=con}
+select * from employee
+where dno not in (10, 40)
+```
+
+20. Exiba todas as informações sobre qualquer funcionário cujo salário seja maior ou igual a \$500,00 e menor ou igual a \$2.000,00.
+
+```{sql connection=con}
+select * from employee
+where salary between 500 and 2000
+```
+
+21. Exiba todas as informações sobre qualquer funcionário cujo salário seja menor que \$500,00 ou maior que \$2.000,00.
+
+```{sql connection=con}
+select * from employee
+where salary not between 500 and 2000
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
