@@ -1,0 +1,86 @@
+---
+title: "Lab04"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lab04
+
+1.  
+
+```{r}
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+```
+
+2.  
+
+```{r}
+fname <- "C:/Users/afran/Documents/ME315/Lab04/WDIEXCEL.xlsx"
+file.exists(fname)
+```
+
+3.  
+
+```{r}
+countries_raw <- read_excel(fname, sheet = "Country")
+```
+
+4.  
+
+```{r}
+countries <- countries_raw |> filter(`Country Code` %in% c("BRA", "ABW", "AFE", "AFG", "AFW"))
+countries
+```
+
+5.  
+
+```{r}
+WDI_raw <- read_excel(fname, sheet = "Data")
+```
+
+6.  
+
+```{r}
+WDI <- WDI_raw |> select(`Country Code`, `Indicator Code`, `1960`:`2018`)
+WDI
+```
+
+7.  
+
+```{r}
+WDI <- WDI |> pivot_longer(cols = "1960":"2018", 
+                           names_to = "Year", 
+                           names_transform = list(Year = as.integer)) |> pivot_wider(names_from = `Indicator Code`, 
+            values_from = "value")
+WDI
+```
+
+8.  
+
+```{r}
+select(WDI, Year)
+```
+
+9.  
+
+```{r}
+WDI <- WDI |> select(`Country Code`, Year, SP.DYN.CBRT.IN) |> filter(`Country Code` %in% countries$`Country Code`)
+Data <- left_join(countries, WDI)
+Data
+```
+
+10. 
+
+```{r}
+Data |> arrange(`Country Code`, Year)
+```
+
+11. 
+
+```{r}
+ggplot(Data, aes(x = Year, y = SP.DYN.CBRT.IN, colour = `Country Code`)) +
+  geom_line()
+```
