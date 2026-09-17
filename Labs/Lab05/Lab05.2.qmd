@@ -1,0 +1,90 @@
+---
+title: "Lab05"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lab05
+
+```{r}
+library(readr)
+library(ggplot2)
+library(tidyverse)
+```
+
+```{r}
+aeroportos <- read_csv("airports.csv") |> 
+  select(IATA_CODE, LONGITUDE, LATITUDE)
+
+```
+
+```{r}
+analisa_aeronave <- function(tail_number, arquivo) {
+  
+  callback_filtro <- DataFrameCallback$new(function(chunk, pos) {
+    chunk |> filter(TAIL_NUMBER == tail_number)
+  })
+  
+  voos_aeronave <- read_csv_chunked(
+    arquivo, 
+    callback = callback_filtro, 
+    chunk_size = 100000
+  )
+  
+
+  tabela_tidy <- voos_aeronave |> 
+    arrange(YEAR, MONTH, DAY, DEPARTURE_TIME) |> 
+    left_join(aeroportos, by = c("ORIGIN_AIRPORT" = "IATA_CODE")) |> 
+    rename(LONG_ORIGEM = LONGITUDE, LAT_ORIGEM = LATITUDE) |> 
+    left_join(aeroportos, by = c("DESTINATION_AIRPORT" = "IATA_CODE")) |> 
+    rename(LONG_DESTINO = LONGITUDE, LAT_DESTINO = LATITUDE) |> 
+    mutate(VELOCIDADE_MEDIA = DISTANCE / (AIR_TIME / 60)) 
+  
+
+  min_long <- min(c(tabela_tidy$LONG_ORIGEM, tabela_tidy$LONG_DESTINO), na.rm = TRUE) - 3
+  max_long <- max(c(tabela_tidy$LONG_ORIGEM, tabela_tidy$LONG_DESTINO), na.rm = TRUE) + 3
+  min_lat  <- min(c(tabela_tidy$LAT_ORIGEM, tabela_tidy$LAT_DESTINO), na.rm = TRUE) - 3
+  max_lat  <- max(c(tabela_tidy$LAT_ORIGEM, tabela_tidy$LAT_DESTINO), na.rm = TRUE) + 3
+
+  mapa <- ggplot(tabela_tidy) +
+    borders("world", fill = "gray96", colour = "gray85") +
+    borders("state", colour = "white") +
+    
+    geom_segment(
+      aes(
+        x = LONG_ORIGEM, y = LAT_ORIGEM,
+        xend = LONG_DESTINO, yend = LAT_DESTINO,
+        color = VELOCIDADE_MEDIA,
+        linewidth = VELOCIDADE_MEDIA
+      ),
+      alpha = 0.5,
+      lineend = "round"
+    ) +
+    
+    scale_linewidth_continuous(range = c(0.4, 1.2)) +
+    scale_color_viridis_c(option = "magma") +
+    guides(
+      color = guide_legend(title = "Velocidade (mph)"),
+      linewidth = guide_legend(title = "Velocidade (mph)")
+    ) +
+    
+    coord_quickmap(
+      xlim = c(min_long, max_long),
+      ylim = c(min_lat, max_lat)
+    )
+  return(list(
+    tabela = tabela_tidy,
+    grafico = mapa
+  ))
+}
+```
+
+```{r}
+analisa_aeronave("N407AS", "flights.csv")
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
