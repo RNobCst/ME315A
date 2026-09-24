@@ -1,0 +1,119 @@
+---
+title: "Lab07"
+author: "Rafael Nóbrega Cosa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lab07
+
+```{r}
+library(DBI)
+library(RSQLite)
+
+fname <- "database.sqlite3"
+con <- dbConnect(RSQLite::SQLite(), fname)
+```
+
+```{sql connection=con}
+SELECT COUNT(DISTINCT i.id) AS total_professores
+FROM instructors i
+JOIN teachings t ON i.id = t.instructor_id
+JOIN sections sec ON t.section_uuid = sec.uuid
+JOIN subject_memberships sm ON sec.course_offering_uuid = sm.course_offering_uuid
+JOIN subjects s ON sm.subject_code = s.code
+WHERE s.abbreviation = 'STAT';
+
+```
+
+```{sql connection=con}
+SELECT DISTINCT i.name AS professor
+FROM instructors i
+JOIN teachings t ON i.id = t.instructor_id
+JOIN sections sec ON t.section_uuid = sec.uuid
+JOIN subject_memberships sm ON sec.course_offering_uuid = sm.course_offering_uuid
+JOIN subjects s ON sm.subject_code = s.code
+WHERE s.abbreviation = 'STAT'
+ORDER BY i.name;
+```
+
+```{sql connection=con}
+SELECT 
+  i.name AS professor,
+  ROUND(
+    SUM(gd.a_count * 4.0 + gd.ab_count * 3.5 + gd.b_count * 3.0 + gd.bc_count * 2.5 + gd.c_count * 2.0 + gd.d_count * 1.0) / 
+    SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count), 3
+  ) AS gpa_medio
+FROM instructors i
+JOIN teachings t ON i.id = t.instructor_id
+JOIN sections sec ON t.section_uuid = sec.uuid
+JOIN grade_distributions gd ON sec.course_offering_uuid = gd.course_offering_uuid AND sec.number = gd.section_number
+JOIN subject_memberships sm ON sec.course_offering_uuid = sm.course_offering_uuid
+JOIN subjects s ON sm.subject_code = s.code
+WHERE s.abbreviation = 'STAT'
+GROUP BY i.id, i.name
+HAVING SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count) > 0
+ORDER BY gpa_medio ASC
+LIMIT 1;
+```
+
+```{sql connection=con}
+SELECT 
+  i.name AS professor,
+  ROUND(
+    SUM(gd.a_count * 4.0 + gd.ab_count * 3.5 + gd.b_count * 3.0 + gd.bc_count * 2.5 + gd.c_count * 2.0 + gd.d_count * 1.0) / 
+    SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count), 3
+  ) AS gpa_medio
+FROM instructors i
+JOIN teachings t ON i.id = t.instructor_id
+JOIN sections sec ON t.section_uuid = sec.uuid
+JOIN grade_distributions gd ON sec.course_offering_uuid = gd.course_offering_uuid AND sec.number = gd.section_number
+JOIN subject_memberships sm ON sec.course_offering_uuid = sm.course_offering_uuid
+JOIN subjects s ON sm.subject_code = s.code
+WHERE s.abbreviation = 'STAT'
+GROUP BY i.id, i.name
+HAVING SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count) > 0
+ORDER BY gpa_medio DESC
+LIMIT 1;
+```
+
+```{sql connection=con}
+SELECT 
+  co.name AS disciplina,
+  ROUND(
+    SUM(gd.a_count * 4.0 + gd.ab_count * 3.5 + gd.b_count * 3.0 + gd.bc_count * 2.5 + gd.c_count * 2.0 + gd.d_count * 1.0) / 
+    SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count), 3
+  ) AS gpa_medio
+FROM course_offerings co
+JOIN grade_distributions gd ON co.uuid = gd.course_offering_uuid
+JOIN subject_memberships sm ON co.uuid = sm.course_offering_uuid
+JOIN subjects s ON sm.subject_code = s.code
+WHERE s.abbreviation = 'STAT'
+GROUP BY co.name
+HAVING SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count) > 0
+ORDER BY gpa_medio ASC
+LIMIT 1;
+```
+
+```{sql connection=con}
+SELECT 
+  co.name AS disciplina,
+  ROUND(
+    SUM(gd.a_count * 4.0 + gd.ab_count * 3.5 + gd.b_count * 3.0 + gd.bc_count * 2.5 + gd.c_count * 2.0 + gd.d_count * 1.0) / 
+    SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count), 3
+  ) AS gpa_medio
+FROM course_offerings co
+JOIN grade_distributions gd ON co.uuid = gd.course_offering_uuid
+JOIN subject_memberships sm ON co.uuid = sm.course_offering_uuid
+JOIN subjects s ON sm.subject_code = s.code
+WHERE s.abbreviation = 'STAT'
+GROUP BY co.name
+HAVING SUM(gd.a_count + gd.ab_count + gd.b_count + gd.bc_count + gd.c_count + gd.d_count + gd.f_count) > 0
+ORDER BY gpa_medio DESC
+LIMIT 1;
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
