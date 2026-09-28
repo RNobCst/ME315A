@@ -1,0 +1,126 @@
+---
+title: "Lista06"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+editor: visual
+---
+
+## Lista06
+
+```{r}
+library(DBI)
+library(RSQLite)
+
+con <- dbConnect(RSQLite::SQLite(), "me315.sqlite")
+```
+
+1.  
+
+```{sql connection=con}
+select state, min(acres) from preserve
+group by state
+```
+
+2.  
+
+```{sql connection=con}
+select state, max(acres) from preserve
+where acres <= 10000
+group by state
+```
+
+3.  
+
+```{sql connection=con}
+select state, max(acres) from preserve
+where acres <= 10000
+group by state
+order by max(acres) desc
+```
+
+4.  
+
+```{sql connection=con}
+select state, max(acres) as maxA from preserve
+group by state
+having maxA <= 25000
+```
+
+5.  
+
+```{sql connection=con}
+select state, min(acres) as minA from preserve
+group by state
+having minA < 100
+```
+
+6.  
+
+```{sql connection=con}
+select state, max(acres) as maxA from preserve 
+where acres > 1000
+group by state
+having maxA < 25000
+```
+
+7.  
+
+```{sql connection=con}
+select state, acres from preserve
+where acres between 10000 and 50000
+```
+
+8.  
+
+```{sql connection=con}
+select state, avg(acres) as mean from preserve
+group by state
+order by mean
+limit 1
+```
+
+9.  
+
+```{sql connection=con}
+select dno, avg(salary) as mean from employee
+group by dno
+```
+
+10. 
+
+```{sql connection=con}
+select dno, sum(salary) as sumS, max(salary) as maxS, min(salary) as minS from employee
+group by dno
+```
+
+11. 
+
+```{sql connection=con}
+select dno, count(ename) as n from employee
+where dno <> 40
+group by dno
+```
+
+12. 
+
+```{sql connection=con}
+select dno, sum(salary), count(ename) as n from employee
+group by dno
+having n > 2
+```
+
+13. 
+
+```{sql connection=con}
+select state, sum(acres) as Total from preserve
+group by state
+
+union all
+select "Total", sum(acres) from preserve
+
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
