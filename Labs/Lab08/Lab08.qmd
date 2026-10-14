@@ -1,0 +1,77 @@
+---
+title: "Lab08"
+author: "Rafael Nóbrega Costa - RA:296730"
+format: pdf
+---
+```{python}
+import polars as pl
+
+basics = pl.scan_csv("title.basics0.tsv.gz", separator="\t", null_values=r"\N")
+review = pl.scan_csv("title.ratings.tsv.gz", separator="\t", null_values=r"\N")
+principal = pl.scan_csv("title.principals0.tsv.gz", separator="\t", null_values=r"\N")
+```
+
+```{python}
+#Criando as tabelas:
+tabela1 = basics.join(review, on="tconst", how="inner")
+
+```
+
+1. 
+```{python}
+# 5 Filmes com maior média (questão 1):
+maiores_media = (
+    tabela1
+    .sort(["averageRating", "numVotes"], descending=True)
+    .select(["primaryTitle", "averageRating"])
+    .head(5)
+    .collect()
+)
+maiores_media
+```
+
+2. 
+
+```{python}
+bygenre = (
+    tabela1
+    .filter(pl.col("averageRating") > 8)
+    .group_by("genres")
+    .agg(pl.len().alias("n"))
+    .sort("n", descending=True)
+    .head(10)
+    .collect()
+)
+bygenre
+
+```
+
+3. 
+```{python}
+review_reduzido = (
+    review.select(["tconst", "averageRating"])
+    .filter(pl.col("averageRating") > 7.5)
+)
+principal_reduzido = (
+    principal
+    .select(["tconst", "nconst", "category"])
+)
+
+tabela2 = review_reduzido.join(principal_reduzido, on="tconst", how="inner")
+
+byprincipals = (
+    tabela2
+    .filter(pl.col("averageRating") > 7.5)
+    .group_by("nconst")
+    .agg(pl.len().alias("n"))
+    .sort("n", descending=True)
+    .head(3)
+    .collect()
+)
+byprincipals
+```
+
+```{python}
+from datetime import datetime
+print(datetime.now())
+```
